@@ -1,20 +1,9 @@
-// app/api/records/route.ts
 import { NextRequest } from "next/server";
 import { readdir, readFile } from "fs/promises";
 import path from "path";
+import { ChatSummary } from "@/types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
-
-// Típus: Visszatérési objektum a frontend számára
-export type ChatSummary = {
-  id: string;
-  date: string;
-  agentEmails: string[];
-  content: {
-    sender: string;
-    text: string;
-  }[];
-};
 
 export async function GET(request: NextRequest) {
   try {
