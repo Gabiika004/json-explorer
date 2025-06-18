@@ -1,96 +1,116 @@
 import { NextRequest } from "next/server";
+import fs from "fs/promises";
 import { readdir, readFile } from "fs/promises";
+import { NextResponse } from "next/server";
 import path from "path";
 import { ChatSummary } from "@/types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const filterDate = searchParams.get("date"); // pl: 2025-06-12
-    const filterAgent = searchParams.get("agent"); // pl: vegasonline
-
-    const jsonFiles = await getAllJsonFiles(DATA_DIR);
-    const results: ChatSummary[] = [];
-
-    for (const file of jsonFiles) {
-      const content = await readFile(file, "utf-8");
-      const parsed = JSON.parse(content);
-      const chats = Array.isArray(parsed) ? parsed : [];
-
-      if (!Array.isArray(chats)) continue;
-
-      for (const chat of chats) {
-        const id = chat.id;
-        const createdAtRaw = chat.thread?.created_at;
-        const date = createdAtRaw
-          ? new Date(createdAtRaw).toISOString().split("T")[0]
-          : "Invalid Date";
-
-        // Szűrés dátum szerint
-        if (filterDate && date !== filterDate) continue;
-
-        // Agent emailek kinyerése
-        const agentEmails = (chat.users || [])
-          .filter((u: any) => u.type === "agent" && typeof u.email === "string")
-          .map((u: any) => u.email);
-
-        // Szűrés agent szerint
-        if (
-          filterAgent &&
-          !agentEmails.some((email: string) =>
-            email.toLowerCase().includes(filterAgent.toLowerCase())
-          )
-        ) {
-          continue;
-        }
-
-        // Tartalom kinyerése: csak message vagy system_message
-        const content = (chat.thread?.events || [])
-          .filter((e: any) => ["message", "system_message"].includes(e.type))
-          .map((e: any) => {
-            const sender = agentEmails.includes(e.author_id)
-              ? "Agent"
-              : "Felhasználó";
-            return {
-              sender,
-              text: e.text || "",
-            };
-          });
-
-        results.push({
-          id,
-          date,
-          agentEmails,
-          content,
-        });
-      }
-    }
-
-    return Response.json(results);
-  } catch (err) {
-    console.error("API hiba:", err);
-    return new Response(JSON.stringify({ error: "Szerverhiba" }), {
-      status: 500,
-    });
-  }
+// yyyy-mm-dd formátum
+function formatDate(date: Date): string {
+  return date.toISOString().split("T")[0];
 }
 
-// Rekurzív mappa bejárás: visszaadja az összes json fájlt
-async function getAllJsonFiles(dir: string): Promise<string[]> {
-  const files = await readdir(dir, { withFileTypes: true });
-  const result: string[] = [];
+// JSON fájlok beolvasása
+async function readJsonFiles(dir: string): Promise<ChatSummary[]> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
 
-  for (const file of files) {
-    const fullPath = path.join(dir, file.name);
-    if (file.isDirectory()) {
-      const nested = await getAllJsonFiles(fullPath);
-      result.push(...nested);
-    } else if (file.name.endsWith(".json")) {
-      result.push(fullPath);
+  const results: ChatSummary[] = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      const subResults = await readJsonFiles(fullPath);
+      results.push(...subResults);
+    } else if (entry.name.endsWith(".json")) {
+      const fileContent = await fs.readFile(fullPath, "utf-8");
+      try {
+        const json = JSON.parse(fileContent);
+
+        const conversations = Array.isArray(json) ? json : [];
+
+        for (const conversation of conversations) {
+          const thread = conversation.thread || {};
+          const users = conversation.users || [];
+
+          const agentEmails = users
+            .filter((u: any) => u.type === "agent")
+            .map((u: any) => u.email || "ismeretlen");
+
+          const customer = users.find(
+            (u: any) => u.type === "customer" || u.type === "user"
+          );
+
+          const messages =
+            thread?.events?.filter((e: any) => e.type === "message") || [];
+          const parsedMessages = messages.map((msg: any) => ({
+            sender: msg.author_id === customer?.id ? "Customer" : "Agent",
+            text: msg.text || "(nincs szöveg)",
+          }));
+
+          results.push({
+            id: conversation.id,
+            date: thread.created_at
+              ? formatDate(new Date(thread.created_at))
+              : "ismeretlen",
+            agentEmails,
+            customerEmail: customer?.email,
+            customerName: customer?.name,
+            timestamp: thread?.created_at,
+            content: parsedMessages,
+          });
+        }
+      } catch (err) {
+        console.error("Hiba a JSON feldolgozásakor:", fullPath, err);
+      }
     }
   }
 
-  return result;
+  return results;
+}
+
+//GET végpont – keresés agent, dátum, email, ticket ID alapján
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+
+  const searchAgent = searchParams.get("agent")?.toLowerCase();
+  const searchDate = searchParams.get("date");
+  const customerEmail = searchParams.get("customerEmail")?.toLowerCase();
+  const customerName = searchParams.get("customerName")?.toLowerCase();
+  const ticketId = searchParams.get("ticketId")?.toLowerCase();
+
+  const chats = await readJsonFiles(DATA_DIR);
+
+  const filtered = chats.filter((chat) => {
+    if (
+      searchAgent &&
+      !chat.agentEmails.some((email) =>
+        email.toLowerCase().includes(searchAgent)
+      )
+    ) {
+      return false;
+    }
+    if (searchDate && chat.date !== searchDate) {
+      return false;
+    }
+    if (
+      customerEmail &&
+      !chat.customerEmail?.toLowerCase().includes(customerEmail)
+    ) {
+      return false;
+    }
+    if (
+      customerName &&
+      !chat.customerName?.toLowerCase().includes(customerName)
+    ) {
+      return false;
+    }
+    if (ticketId && !chat.id.toLowerCase().includes(ticketId)) {
+      return false;
+    }
+    return true;
+  });
+
+  return NextResponse.json(filtered);
 }
