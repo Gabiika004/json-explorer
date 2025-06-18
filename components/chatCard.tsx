@@ -20,7 +20,7 @@ export function ChatCard({ chat }: ChatCardProps) {
         {chat.timestamp && (
           <p className="text-[#AAAAAA]">
             <span className="font-bold">Időpont:</span>{" "}
-            {new Date(chat.timestamp).toLocaleString()}
+            {new Date(chat.timestamp).toISOString().slice(11, 19)}
           </p>
         )}
 
