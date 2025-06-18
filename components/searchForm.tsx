@@ -92,7 +92,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
     <Form {...rhf}>
       <form
         onSubmit={(e) => e.preventDefault()}
-        className="space-y-6 md:space-y-0 md:flex md:items-end md:gap-4 mb-6 bg-white/10 p-6 max-w-3xl mx-auto rounded-xl shadow-md backdrop-blur border border-white/20 text-white"
+        className="flex flex-wrap items-start gap-4 mb-6 bg-white/10 p-6 max-w-5xl mx-auto rounded-xl shadow-md backdrop-blur border border-white/20 text-white"
       >
         <FormField
           control={rhf.control}
@@ -158,7 +158,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
                 <Input
                   placeholder="pl: vegasonline"
                   {...field}
-                  className="bg-white text-gray-800"
+                  className="bg-white text-gray-800 min-w-50"
                 />
               </FormControl>
             </FormItem>
@@ -175,7 +175,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
                 <Input
                   placeholder="pl: gmail.com"
                   {...field}
-                  className="bg-white text-gray-800"
+                  className="bg-white text-gray-800 min-w-50"
                 />
               </FormControl>
             </FormItem>
@@ -192,7 +192,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
                 <Input
                   placeholder="pl: Béla"
                   {...field}
-                  className="bg-white text-gray-800"
+                  className="bg-white text-gray-800 min-w-50"
                 />
               </FormControl>
             </FormItem>
@@ -209,7 +209,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
                 <Input
                   placeholder="pl: 123abc"
                   {...field}
-                  className="bg-white text-gray-800"
+                  className="bg-white text-gray-800 min-w-50"
                 />
               </FormControl>
             </FormItem>
