@@ -25,6 +25,9 @@ import { cn } from "@/lib/utils";
 export type FormValues = {
   date?: string;
   agent?: string;
+  customerEmail?: string;
+  customerName?: string;
+  ticketId?: string;
 };
 
 interface SearchFormProps {
@@ -43,33 +46,45 @@ export function SearchForm({ onSearch }: SearchFormProps) {
     defaultValues: {
       date: undefined,
       agent: "",
+      customerEmail: "",
+      customerName: "",
+      ticketId: "",
     },
   });
 
   const { watch, reset } = rhf;
   const watchAgent = watch("agent");
   const watchDate = rhf.watch("date");
+  const watchCustomerEmail = rhf.watch("customerEmail");
+  const watchCustomerName = rhf.watch("customerName");
+  const watchTicketId = rhf.watch("ticketId");
 
   useEffect(() => {
     const currentDate = watchDate as Date | undefined;
 
-    if (currentDate instanceof Date || currentDate === undefined) {
-      onSearch({
-        agent: watchAgent || undefined,
-        date: formatDateForSearch(currentDate),
-      });
-    }
-  }, [watchAgent, watchDate]);
-
-  const handleSearch = (values: FormValues) => {
     onSearch({
-      agent: values.agent || undefined,
-      date: formatDateForSearch(values.date),
+      agent: watchAgent || undefined,
+      date: formatDateForSearch(currentDate),
+      customerEmail: watchCustomerEmail || undefined,
+      ticketId: watchTicketId || undefined,
+      customerName: watchCustomerName || undefined,
     });
-  };
+  }, [
+    watchAgent,
+    watchDate,
+    watchCustomerEmail,
+    watchTicketId,
+    watchCustomerName,
+  ]);
 
   const handleReset = () => {
-    reset({ date: undefined, agent: "" });
+    reset({
+      date: undefined,
+      agent: "",
+      customerEmail: "",
+      customerName: "",
+      ticketId: "",
+    });
     onSearch();
   };
 
@@ -142,6 +157,57 @@ export function SearchForm({ onSearch }: SearchFormProps) {
               <FormControl>
                 <Input
                   placeholder="pl: vegasonline"
+                  {...field}
+                  className="bg-white text-gray-800"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={rhf.control}
+          name="customerEmail"
+          render={({ field }) => (
+            <FormItem className="w-full md:w-auto">
+              <FormLabel>Ügyfél email tartalom</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="pl: gmail.com"
+                  {...field}
+                  className="bg-white text-gray-800"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={rhf.control}
+          name="customerName"
+          render={({ field }) => (
+            <FormItem className="w-full md:w-auto">
+              <FormLabel>Ügyfél név tartalom</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="pl: Béla"
+                  {...field}
+                  className="bg-white text-gray-800"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={rhf.control}
+          name="ticketId"
+          render={({ field }) => (
+            <FormItem className="w-full md:w-auto">
+              <FormLabel>Ticket ID</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="pl: 123abc"
                   {...field}
                   className="bg-white text-gray-800"
                 />
