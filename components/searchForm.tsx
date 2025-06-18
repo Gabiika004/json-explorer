@@ -153,7 +153,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
           name="agent"
           render={({ field }) => (
             <FormItem className="w-full md:w-auto">
-              <FormLabel>Agent email tartalom</FormLabel>
+              <FormLabel>Agent email</FormLabel>
               <FormControl>
                 <Input
                   placeholder="pl: vegasonline"
@@ -170,7 +170,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
           name="customerEmail"
           render={({ field }) => (
             <FormItem className="w-full md:w-auto">
-              <FormLabel>Ügyfél email tartalom</FormLabel>
+              <FormLabel>Ügyfél email</FormLabel>
               <FormControl>
                 <Input
                   placeholder="pl: gmail.com"
@@ -187,7 +187,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
           name="customerName"
           render={({ field }) => (
             <FormItem className="w-full md:w-auto">
-              <FormLabel>Ügyfél név tartalom</FormLabel>
+              <FormLabel>Ügyfél név</FormLabel>
               <FormControl>
                 <Input
                   placeholder="pl: Béla"
@@ -219,7 +219,7 @@ export function SearchForm({ onSearch }: SearchFormProps) {
         <div className="flex gap-2 w-full md:w-auto">
           <Button
             type="button"
-            className="w-full md:w-auto bg-[#00FF85] hover:bg-[#33cc82] text-black font-bold px-4 py-2 transition hover:scale-105"
+            className="w-full cursor-pointer md:w-auto bg-[#00FF85] hover:bg-[#33cc82] text-black font-bold px-4 py-2 transition hover:scale-105"
             onClick={handleReset}
           >
             Szűrők törlése
