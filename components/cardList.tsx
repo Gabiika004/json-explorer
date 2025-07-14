@@ -9,7 +9,7 @@ interface CardListProps {
 
 export function CardList({ data }: CardListProps) {
   if (!data || data.length === 0) {
-    return <p className="text-gray-400 text-sm">Nincs találat.</p>;
+    return <p className="text-muted-foreground text-sm">Nincs találat.</p>;
   }
 
   // Egyedi id-k szerint szűrés (első előfordulás marad)
