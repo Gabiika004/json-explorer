@@ -1,60 +1,69 @@
-# JSON Chat Explorer – Prototípus
+# JSON Chat Explorer
 
-Ez a projekt egy egyszerű, böngészhető **chat-összegző felület**, amely JSON fájlokból származó adatokat jelenít meg. A cél egy strukturált és könnyen kezelhető UI, ahol a felhasználók dátum és ügynök (agent email) alapján szűrhetik a beszélgetések összefoglalóit.
+Ez a projekt egy modern, böngészhető **chat-összegző felület**, amely JSON fájlokból származó adatokat jelenít meg. A cél egy strukturált, könnyen kezelhető UI, ahol a felhasználók többféle szűrési feltétellel böngészhetik a beszélgetések összefoglalóit.
 
 ---
 
 ## 🔧 Hogyan működik?
 
-A projekt **Next.js** alapokra épül, a fájlrendszerből olvassa be az adatokat, majd UI-n keresztül lehet szűrni azokat:
-
-- Alapértelmezetten **minden rekord megjelenik**.
-- A felhasználó **agent email** és **dátum** alapján szűrhet.
-- A szűrés **valós időben** történik, nincs szükség külön keresés gombra.
-- A kártyák egyedileg az `id` alapján kerülnek megjelenítésre, ismétlődés kizárva.
+- **Next.js + Tailwind CSS** alapú SPA.
+- Az adatok a projekt `data` mappájában lévő JSON fájlokból származnak.
+- A backend egy `scripts/generate-index.ts` script segítségével összegyűjti és egységesíti az adatokat a `public/index.json` fájlba.
+- Az alkalmazás frontendje mindig ezt az index.json-t olvassa be, és **kliensoldalon** szűri az adatokat.
+- Ha nincs index.json, vagy hibás, a rendszer automatikusan megpróbálja legenerálni azt.
+- Manuálisan is frissíthető az adatbázis az "Adatok beolvasása" gombbal.
+- A keresőmezők egy fixen fennmaradó navbarban találhatók, amelynek háttere világos módban #888888, sötét módban #222.
+- A teljes UI támogatja a **dark/light theme**-et, amelyet a jobb felső sarokban lévő gombbal lehet váltani (és megjegyzi a választást).
 
 ---
 
 ## 📁 Könyvtárstruktúra és adatfeltöltés
 
-Az alkalmazás működéséhez létre kell hozni egy `data` nevű mappát, ahová a JSON fájlokat kell tölteni az alábbi struktúrában:
+Az alkalmazás működéséhez hozz létre egy `data` nevű mappát a projekt gyökerében, ahová a JSON fájlokat kell tölteni, pl.:
 
 ```
 /data
-  └── 2024
+  └── 2025
       └── 06
-          └── 13.json
+          └── 12.json
 ```
 
-### 🔸 JSON fájl formátuma
+A JSON fájlok lehetnek nyers chat exportok (pl. LiveChat formátum), a backend script automatikusan egységes ChatSummary objektumokká alakítja őket.
 
-Egy fájl több chat összefoglalót tartalmazhat. A struktúra az alábbi szerint épül fel:
+---
 
-```json
-[
-  {
-    "id": "abc123",
-    "date": "2024-06-13",
-    "agentEmails": ["example@domain.com", "support@domain.com"],
-    "content": [
-      {
-        "sender": "Agent",
-        "text": "Üdvözlöm, miben segíthetek?"
-      },
-      {
-        "sender": "Customer",
-        "text": "A problémám a következő..."
-      }
-    ]
-  },
-  {
-    "id": "123abc",
-    "date": "2024-06-11",
-    "agentEmails": [],
-    "content": [...]
-  }
-]
-```
+## 🔄 Adatbázis generálás/frissítés
+
+Az adatok összegyűjtéséhez és egységesítéséhez a következő történik:
+
+- A `scripts/generate-index.ts` script rekurzívan beolvassa a `data` mappában található összes .json fájlt.
+- Minden beszélgetést egységes szerkezetű objektummá alakít (id, dátum, agent email(ek), ügyfél adatok, üzenetek, stb.).
+- Az eredményt a `public/index.json` fájlba írja ki.
+- A generálás automatikusan megtörténik, ha az index.json hiányzik vagy hibás, illetve manuálisan is indítható a kereső sávban lévő "Adatok beolvasása" gombbal.
+
+---
+
+## 🔍 Keresés és szűrés
+
+A keresőmezők a lap tetején, egy fixen fennmaradó navbarban találhatók. Szűrhetsz:
+
+- **Dátum** (naptárból választható)
+- **Email** (agent vagy ügyfél emailcím részlete)
+- **Ügyfél név**
+- **Ticket ID**
+
+A szűrés **valós időben** történik, minden változtatásra azonnal frissül a találati lista.
+
+A "Szűrők törlése" gomb minden keresési feltételt visszaállít.
+
+---
+
+## 🌗 Dark/Light theme
+
+- A teljes UI támogatja a világos és sötét témát.
+- A jobb felső sarokban található gombbal bármikor átválthatsz.
+- A választásod megmarad (localStorage), de az OS/böngésző preferenciát is figyelembe veszi első betöltéskor.
+- A színek Tailwind változókon és CSS változókon alapulnak, minden komponens automatikusan igazodik a témához.
 
 ---
 
@@ -80,16 +89,29 @@ npm run dev
 ```
 
 Ezután nyisd meg a böngészőt: [http://localhost:3000](http://localhost:3000)
-A cím nálad lehet más, ha futtatsz másik saját szervert
+
+### 4. (Opcionális) Tesztadatok generálása
+
+Futtasd a teszt chat generáló scriptet, ha szeretnél sok tesztadatot:
+
+```bash
+npx tsx scripts/generate-test-chats.ts
+```
+
+Majd generáld újra az indexet:
+
+```bash
+npx tsx scripts/generate-index.ts
+```
 
 ---
 
 ## ℹ️ Egyéb tudnivalók
 
-- Az alkalmazás jelenleg **prototípus fázisban van**, így hibák vagy hiányosságok előfordulhatnak.
-- A **`data` mappa nem kerül verziókövetés alá**, így neked kell feltölteni saját adatokat a használathoz.
-- A projekt **szabadon felhasználható és módosítható** saját célokra.
 - Az alkalmazás **offline fut**, nem küld adatokat külső szerverekre.
+- A `data` mappa nem kerül verziókövetés alá, saját adatokat kell feltölteni.
+- A projekt szabadon felhasználható és módosítható.
+- A backend script csak saját szerveren, Node.js környezetben futtatható (Vercel/Netlify nem támogatja a child_process-t).
 
 ---
 
